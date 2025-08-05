@@ -1,0 +1,5 @@
+apiVersion: v2
+name: rancher
+description: values for Rancher deployment
+type: application
+version: 0.1.0

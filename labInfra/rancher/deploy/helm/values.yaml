@@ -1,0 +1,10 @@
+hostname: rancher.tenjinbrasiltechnologies
+replicas: 1
+ingress:
+  tls:
+    source: letsencrypt
+
+letsencrypt:
+  email: pauloagrillo@hotmail.com
+  enviroment: staging
+  
