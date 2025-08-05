@@ -1,0 +1,2 @@
+# Esse chart é um placeholder para o Helm, usado para garantir que o Helm reconheça a estrutura do chart.
+# Ele não contém recursos reais, mas é necessário para o deploy do Cert-Manager.
