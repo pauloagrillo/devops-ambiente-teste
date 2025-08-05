@@ -1,4 +1,4 @@
-hostname: rancher.tanjinbrasiltechnologies
+hostname: rancher.taijinbrasiltechnologies
 replicas: 1
 ingress:
   tls:
