@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "graylog.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "graylog.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "graylog.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "graylog.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      securityContext: {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: graylog
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext: {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.httpPort }}
+            - name: gelf-udp
+              containerPort: {{ .Values.service.gelfUdpPort }}
+              protocol: UDP
+          env:
+            - name: GRAYLOG_HTTP_EXTERNAL_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "graylog.fullname" . }}-config
+                  key: http_external_uri
+
+            - name: GRAYLOG_PASSWORD_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ if .Values.secrets.useExisting }}{{ .Values.secrets.existingSecretName }}{{ else }}{{ include "graylog.fullname" . }}-secrets{{ end }}
+                  key: PASSWORD_SECRET
+            - name: GRAYLOG_ROOT_PASSWORD_SHA2
+              valueFrom:
+                secretKeyRef:
+                  name: {{ if .Values.secrets.useExisting }}{{ .Values.secrets.existingSecretName }}{{ else }}{{ include "graylog.fullname" . }}-secrets{{ end }}
+                  key: ROOT_SHA256
+
+            - name: MONGO_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.graylog.mongodb.credentialsSecret.name }}
+                  key: {{ .Values.graylog.mongodb.credentialsSecret.usernameKey }}
+            - name: MONGO_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.graylog.mongodb.credentialsSecret.name }}
+                  key: {{ .Values.graylog.mongodb.credentialsSecret.passwordKey }}
+            - name: GRAYLOG_MONGODB_URI
+              value: "mongodb://$(MONGO_USER):$(MONGO_PASS)@{{ .Values.graylog.mongodb.host }}:{{ .Values.graylog.mongodb.port }}/{{ .Values.graylog.mongodb.database }}"
+
+            - name: GRAYLOG_ELASTICSEARCH_HOSTS
+              value: {{ .Values.graylog.opensearch.hosts | quote }}
+
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.readinessProbe.path }}
+              port: {{ .Values.service.httpPort }}
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+
+          resources: {{- toYaml .Values.resources | nindent 12 }}
+
+          {{- if .Values.persistence.enabled }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ .Values.persistence.mountPath }}
+          {{- end }}
+
+      {{- if .Values.persistence.enabled }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "graylog.fullname" . }}-pvc
+      {{- end }}
+---
+{{- if .Values.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "graylog.fullname" . }}-pvc
+  namespace: {{ .Release.Namespace }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: {{ .Values.persistence.storageClass | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.size | quote }}
+{{- end }}

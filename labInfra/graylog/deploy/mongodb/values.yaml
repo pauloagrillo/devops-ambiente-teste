@@ -1,0 +1,28 @@
+architecture: replicaset
+replicaCount: 1
+
+auth:
+  enabled: true
+  rootPassword: ""
+  username: ""
+  password: "" 
+  database: graylog
+extraEnvVars:
+  - name: MONGO_INITDB_ROOT_PASSWORD
+    valueFrom: { secretKeyRef: { name: mongo-auth, key: root-password } }
+  - name: MONGO_INITDB_USERNAME
+    valueFrom: { secretKeyRef: { name: mongo-auth, key: app-user } }
+  - name: MONGO_INITDB_PASSWORD
+    valueFrom: { secretKeyRef: { name: mongo-auth, key: app-password } }
+
+persistence:
+ enabled: true
+ storageClass: "longhorn"
+ size: 5Gi
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 512Mi

@@ -1,0 +1,10 @@
+Graylog instalado.
+
+URL:
+{{- range .Values.ingress.hosts }}
+  - https://{{ .host }}/
+{{- end }}
+
+Pós-instalação:
+1) System -> Inputs -> GELF UDP -> Launch new input -> 0.0.0.0:{{ .Values.service.gelfUdpPort }}
+2) Verifique conexão com Mongo/OpenSearch nos logs do pod.

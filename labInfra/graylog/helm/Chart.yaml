@@ -1,0 +1,6 @@
+apiVersion: v2
+name: graylog
+description: Minimal Helm chart for Graylog RKE2 + Traefik
+type: application
+version: 0.1.0
+appVersion: "5.2.0"

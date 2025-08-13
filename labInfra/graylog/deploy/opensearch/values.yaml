@@ -1,0 +1,26 @@
+clusterName: "opensearch-cluster"
+singleNode: true
+
+persistence:
+  enabled: true
+  storageClass: "standard"
+  size: "6Gi"
+
+resources:
+  requests:
+    cpu: "200m"
+    memory: "1Gi"
+  limits:
+    memory: "2Gi"
+
+extraEnvs:
+  - name: OPENSEARCH_JAVA_OPTS
+    value: "-Xms512m -Xmx512m"
+  - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: opensearch-admin  # ← Referencia o secret
+        key: password           # ← Chave específica
+pdb:
+  create: true
+  minAvailable: 0

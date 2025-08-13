@@ -1,0 +1,66 @@
+image:
+  repository: graylog/graylog
+  tag: "5.2.0"
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 9000
+  gelfUdpPort: 12201
+
+ingress:
+  enabled: true
+  className: "traefik"
+  annotations: {}
+  hosts:
+    - host: graylog.taijinbrasil.com.br
+      paths:
+        - /
+  tls:
+    enabled: true
+    secretName: graylog-tls
+
+graylog:
+  httpExternalUri: "http://graylog.taijinbrasil.com.br/"
+  mongodb:
+    host: "graylog-mongodb"
+    port: 27017
+    database: "graylog"
+    credentialsSecret:
+      name: "mongo-auth"
+      usernameKey: "app-user"
+      passwordKey: "app-password"
+  opensearch:
+    host: "http://opensearch-cluster-master.graylog.svc.cluster.local:9200"
+
+secrets:
+  useExisting: true
+  existingSecretName: "graylog-secrets"
+  create:
+    passwordSecret: ""
+    rootPasswordSha2: ""
+
+readinessProbe:
+  path: /api/system/lbstatus
+  initialDelaySeconds: 20
+  periodSeconds: 10
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 512Mi
+
+podSecurityContext: {}
+containerSecurityContext: {}
+
+persistence:
+  enabled: false
+  storageClass: longhorn
+  size: 10Gi
+  mountPath: /opt/graylog/data
+
+
