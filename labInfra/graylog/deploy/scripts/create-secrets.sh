@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
-ROOT_DIR="$(git rev-parse --show-toplevel)/graylog"
+ROOT_DIR="$(git rev-parse --show-toplevel)/labInfra/graylog"
 source "$ROOT_DIR/.env"
 
 # OpenSearch credentials
